@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-
+import os
 
 class DataLoader:
     def __init__(self,path) -> None:
@@ -25,6 +25,13 @@ class DataLoader:
         self.df_lan2country_df = pd.read_csv(self.path+'/language to country.csv')
         self.df_most_common_lang = pd.read_csv(self.path+"/MostCommonLanguageByDirector.csv")
         self.df_spliberg = pd.read_csv(self.path+"/spielberg_awards.csv", encoding='latin1')
+
+
+    def ping(self):
+        print(__file__)
+        print(os.path.dirname(__file__))
+        print(os.path.join(os.path.dirname(os.path.dirname(__file__)),"data"))
+
 
 if __name__ == "__main__":
     dp=DataLoader("data")
