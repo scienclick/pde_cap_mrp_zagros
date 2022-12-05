@@ -60,6 +60,8 @@ if __name__ == "__main__":
     target_1=y.iloc[:,0]
     target_2=y.iloc[:,1]
 
+    mlflow.sklearn.autolog()
+    mlflow.xgboost.autolog()
 
     with mlflow.start_run():
         cat_transformer = Pipeline([
