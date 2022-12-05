@@ -14,6 +14,7 @@ class DataLoader:
         self.df_lan2country_df=None
         self.df_most_common_lang=None
         self.df_spliberg=None
+        self.data_awards_cleaned=None
 
     def get_data(self):
         self.df_awards = pd.read_csv(self.path+"/220k_awards_by_directors.csv")
@@ -25,6 +26,7 @@ class DataLoader:
         self.df_lan2country_df = pd.read_csv(self.path+'/language to country.csv')
         self.df_most_common_lang = pd.read_csv(self.path+"/MostCommonLanguageByDirector.csv")
         self.df_spliberg = pd.read_csv(self.path+"/spielberg_awards.csv", encoding='latin1')
+        self.data_awards_cleaned=pd.read_pickle(self.path+"/df_awards_c.pkl")
 
 
     def ping(self):
