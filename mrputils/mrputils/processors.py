@@ -46,9 +46,9 @@ def tokenize(text):
 
 def prep_data(text,method=CountVectorizer):
     '''
-    this method counts either counts the words 
-    in sentences (CountVectorizer) or wights them 
-    based on their importance in the sentence 
+    this method counts either counts the words
+    in sentences (CountVectorizer) or wights them
+    based on their importance in the sentence
     and entire data(TfidfVectorizer):
     '''
     count_vector = method(tokenizer=tokenize)
@@ -60,7 +60,7 @@ def prep_data(text,method=CountVectorizer):
 
 def tweak_details(df_all_details):
     return (#1- major cleanups
-    df_all_details  
+    df_all_details
         .query("status in ['Released']")
         .pipe(lambda df_:df_.replace("none",np.NaN))
         .assign(revenue=lambda df_:df_.revenue.replace(0,np.NAN),
@@ -78,9 +78,9 @@ def tweak_details(df_all_details):
             original_language=lambda df_:df_.original_language.apply(lambda x:1 if x=="en" else 0),
             production_countries=lambda df_:df_.production_countries.apply(lambda x:1 if x=="United States of America" else 0),
             spoken_languages=lambda df_:df_.spoken_languages.apply(lambda x:1 if x=="English" else 0),
-      
+
             )
-        
+
         .dropna(subset="revenue")
         .query("revenue > 0")
         .reset_index(drop=True)
@@ -89,23 +89,24 @@ def tweak_details(df_all_details):
         .drop(columns=["imdb_id","original_title",
                     "overview","status","tagline","title","vote_average","vote_count",
                     "production_companies","release_date","day_of_week_temp","month"])
-    
+
     )
-    
+
 def fame_func(data_awards_cleaned,director,dt_,stat=0):
 
-    try: 
+
+    try:
         if stat==0:
             return data_awards_cleaned.loc[director][data_awards_cleaned.loc[director].index<=dt_].tail(1).nominated_cumsum.values[0]
         else:
             return data_awards_cleaned.loc[director][data_awards_cleaned.loc[director].index<=dt_].tail(1).won_cumsum.values[0]
-            
+
     except:
         return np.NaN
 
 def tweak_cast(df_all_casting,df):
     return(#2- extracting actor_weights
-            df_all_casting 
+            df_all_casting
                 .melt(id_vars="id",value_vars=["actor1_name","actor2_name","actor3_name","actor4_name","actor5_name"])
                 .sort_values(by=["id","variable"])
                 .merge(df[["id","year"]],on="id",how="left")
@@ -117,10 +118,10 @@ def tweak_cast(df_all_casting,df):
                 .pipe(lambda df_:pd.pivot(df_,values="actor_freq",columns="variable",index="id"))
                 .reset_index()
             )
-    
+
 def tweak_director(df_all_casting,df):
     return (#2- extracting director_weights
-                    df_all_casting 
+                    df_all_casting
                     .melt(id_vars="id",value_vars=["director_name"])
                     .sort_values(by=["id","variable"])
                     .merge(df[["id","year"]],on="id",how="left")
@@ -133,7 +134,7 @@ def tweak_director(df_all_casting,df):
                     .drop(columns=["variable","value","year","unit"])
                     .merge(df_all_casting[["id","director_name"]],on="id",how="left")
     )
-      
+
 def data_awards_cleaned_func(df_awards):
     return (
         df_awards
@@ -150,34 +151,34 @@ def data_awards_cleaned_func(df_awards):
                     )
                 .set_index(["director_name","year"])
             )
-    
-def tweak_data(df_all_casting,df_all_details,df_awards):
+
+def tweak_data(df_all_casting,df_all_details,data_awards_cleaned):
     df=tweak_details(df_all_details)
     actors_df=tweak_cast(df_all_casting,df)
     director_df=tweak_director(df_all_casting,df)
-    
-    data_awards_cleaned=data_awards_cleaned_func(df_awards)
+
+    # data_awards_cleaned=data_awards_cleaned_func(df_awards)
     df=(
     df
     .merge(actors_df,on=['id'],how="left")
     .merge(director_df,on=['id'],how="left")
-    # .pipe(get_var, 'new_cols') 
+    # .pipe(get_var, 'new_cols')
     .drop(columns=[
         # "id",
         "genres","spoken_languages_number"] )
     ).assign(
         fame_nominated= lambda df_:df_.apply(lambda df_:fame_func(data_awards_cleaned,df_.director_name,df_.year),axis=1),
         fame_won= lambda df_:df_.apply(lambda df_:fame_func(data_awards_cleaned,df_.director_name,df_.year,stat=1),axis=1)
-        
+
     ).drop(columns=["director_name","year"] )
 
 
     df_nulls=df.replace(-999,np.NAN)
     df
-    
+
     return df,df_nulls
 
-def tweak_data4_prediction(df_all_casting,record_casting,df_all_details,record_data,df_awards):
+def tweak_data4_prediction(df_all_casting,record_casting,df_all_details,record_data,data_awards_cleaned):
     record_data.iloc[0,0]=-1001
     record_data.reset_index(inplace=True,drop=True)
     record_casting.iloc[0,0]=-1001
@@ -191,7 +192,12 @@ def tweak_data4_prediction(df_all_casting,record_casting,df_all_details,record_d
 
     director_df=tweak_director(df_all_casting,df)
 
-    data_awards_cleaned=data_awards_cleaned_func(df_awards)
+    # data_awards_cleaned=data_awards_cleaned_func(df_awards)
+
+
+    data_awards_cleaned_=data_awards_cleaned.loc[record_casting.director_name]
+
+
     df=(
     df
     .merge(actors_df,on=['id'],how="left")
@@ -200,12 +206,12 @@ def tweak_data4_prediction(df_all_casting,record_casting,df_all_details,record_d
         # "id",
         "genres","spoken_languages_number"] )
     ).assign(
-        fame_nominated= lambda df_:df_.apply(lambda df_:fame_func(data_awards_cleaned,df_.director_name,df_.year),axis=1),
-        fame_won= lambda df_:df_.apply(lambda df_:fame_func(data_awards_cleaned,df_.director_name,df_.year,stat=1),axis=1)
-        
+        fame_nominated= lambda df_:df_.apply(lambda df_:fame_func(data_awards_cleaned_,df_.director_name,df_.year),axis=1),
+        fame_won= lambda df_:df_.apply(lambda df_:fame_func(data_awards_cleaned_,df_.director_name,df_.year,stat=1),axis=1)
+
     ).drop(columns=["director_name","year"] )
 
-    
-    
-    
+
+
+
     return df.query("id==-1001").drop(columns=["id","revenue","popularity"])
