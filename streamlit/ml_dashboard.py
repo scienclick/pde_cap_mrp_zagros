@@ -99,7 +99,11 @@ st.sidebar.write("___")
 #=================================================
 #                    Sidebar                     #
 #=================================================
+@st.cache()
+def dummy():
+    pass
 
+dummy()
 def estimate(budget_input, genres, actors, director):
     #== sample record format for prediction; sample data called xx ===========================================
     id=597
@@ -213,7 +217,8 @@ if st.sidebar.button('Estimate'):
     plt.axvline(revenue, color='red', linestyle='dashed', linewidth=2, label='valueeeee')
     ymin, ymax = plt.ylim()
     plt.text(revenue,ymax*0.7,f'${round(revenue/1000_000,2)}MM',rotation=90)
-    plt.ylabel("")
+    plt.ylabel("Count")
+    plt.xlabel("Revenue in $MM")
 
     st.pyplot(fig1)
 
@@ -259,13 +264,15 @@ if st.sidebar.button('Estimate'):
     # st.write(similar_ids)
     # st.write(similar_movies)
     st.write('---')
-    # counter = 0
-    # for movie in similar_movies['title']:
-    #     counter+=1
-    #     st.write(f'{counter}) {movie}')
 
-    if st.radio("Similar Movies",similar_movies['title'], on_change=None):
-        pass
+    st.subheader('Similar Movies')
+    
+    counter = 0
+    for movie in similar_movies['title']:
+        counter+=1
+        st.write(f'{counter}) {movie}')
+    
+    with st.expander("Click the drop-down and select a movie for SHAP Analysis.",expanded=False):
+        selected_movie = st.radio('Select a movie:',similar_movies['title'])
+    
 
-    if st.button('Check Shap Analysis'):
-        pass
