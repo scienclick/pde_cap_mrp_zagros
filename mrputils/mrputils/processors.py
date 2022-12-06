@@ -9,6 +9,7 @@ import re
 from nltk.tokenize import word_tokenize
 from nltk.stem.wordnet import WordNetLemmatizer
 import nltk
+nltk.download('stopwords')
 stop_words = nltk.corpus.stopwords.words("english")
 lemmatizer = WordNetLemmatizer()
 from sklearn.feature_extraction.text import CountVectorizer
