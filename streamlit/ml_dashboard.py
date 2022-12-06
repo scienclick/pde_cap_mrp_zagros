@@ -45,7 +45,7 @@ revenue = 0
 #== Import The Data ======================================================================================
 
 if "dp" not in st.session_state:
-    # @st.cache
+    @st.cache()
     def get_dp():
         dp=DataLoader("data")
         dp.get_data()
@@ -55,12 +55,12 @@ if "dp" not in st.session_state:
  #loading all the data
 
 dp = st.session_state["dp"]
-df_awards,df_all_casting,df_all_details=dp.df_awards,dp.df_all_casting,dp.df_all_details
+df_awards,df_all_casting,df_all_details,data_awards_cleaned=dp.df_awards,dp.df_all_casting,dp.df_all_details,dp.data_awards_cleaned
 
-@st.cache
+@st.cache()
 def tweak_data_wrapper(df_all_casting,df_all_details,df_awards):
     return tweak_data(df_all_casting,df_all_details,df_awards)
-__,df_nulls=tweak_data_wrapper(df_all_casting,df_all_details,df_awards)
+__,df_nulls=tweak_data_wrapper(df_all_casting,df_all_details,data_awards_cleaned)
 
 
 #== Load The Models ======================================================================================
@@ -115,7 +115,7 @@ def estimate(budget_input, genres, actors, director):
     record_casting["actor4_name"] = actors[3]
     record_casting["actor5_name"] = actors[4]
     record_casting["director_name"] = director
-    xx=tweak_data4_prediction(df_all_casting,record_casting,df_all_details,record_data,df_awards)
+    xx=tweak_data4_prediction(df_all_casting,record_casting,df_all_details,record_data,data_awards_cleaned)
     popularity = M_pop.predict(xx)
     revenue = M.predict(xx)[0]
     return (revenue,popularity)
