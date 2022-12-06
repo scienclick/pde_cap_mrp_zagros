@@ -13,6 +13,8 @@ from sklearn import set_config
 from mrputils.loaders import DataLoader
 from mrputils.processors import tweak_data,tweak_data4_prediction
 import sys
+import nltk
+nltk.download('stopwords')
 #====================================================================
 #region imports
 st.set_page_config(layout='centered', page_title="Zagros PDE", page_icon='🎬')
@@ -50,6 +52,7 @@ if "dp" not in st.session_state:
 dp = st.session_state["dp"]
 df_awards,df_all_casting,df_all_details,data_awards_cleaned=dp.df_awards,dp.df_all_casting,dp.df_all_details,dp.data_awards_cleaned
 
+
 @st.cache()
 def tweak_data_wrapper(df_all_casting,df_all_details,df_awards):
     return tweak_data(df_all_casting,df_all_details,df_awards)
@@ -61,14 +64,14 @@ __,df_nulls=tweak_data_wrapper(df_all_casting,df_all_details,data_awards_cleaned
 # Use st.session_state and @st.cache
 
 
-def get_models(): 
+def get_models():
     M=pickle.load(open('models/finalized_model.sav',"rb")) # model for revenue
     preprocessor=pickle.load(open('models/preprocessor_x.sav',"rb")) #processor #1
     preprocessor_with_id=pickle.load(open('models/preprocessor_x_id.sav',"rb")) # processor #2
     M_pop=pickle.load(open('models/popularity.sav',"rb"))#model popularity
     knn_model=pickle.load(open('models/knn_similarity.sav',"rb"))
     m_fit=pickle.load(open('models/final_estimator.sav',"rb"))#for shap analysis
-    
+
     return (M, preprocessor, preprocessor_with_id, M_pop, knn_model, m_fit)
 
 M = get_models()[0]
@@ -87,7 +90,7 @@ m_fit = get_models()[5]
 # This line of code will read the css style from style.css file.
 # with open('style.css') as f:
 #     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-    
+
 # SLB Logo
 st.sidebar.image('https://seeklogo.com/images/S/slb-2022-logo-39A081F6E8-seeklogo.com.png',width=80)
 
@@ -115,12 +118,12 @@ def estimate(budget_input, genres, actors, director):
     record_casting["actor5_name"] = actors[4]
     record_casting["director_name"] = director
     xx=tweak_data4_prediction(df_all_casting,record_casting,df_all_details,record_data,data_awards_cleaned)
-    
+
     X_with_id=df_nulls.drop(columns=["revenue","popularity"])
     X_with_id_processed=pd.DataFrame(preprocessor_with_id.transform(X_with_id),columns=preprocessor_with_id.get_feature_names_out())
-    
-    
-    # Find Similar movies 
+
+
+    # Find Similar movies
     num_neighbors=5
     xx_processed=preprocessor.transform(xx)#sample processed
     similars=list(knn_model.kneighbors(xx_processed,n_neighbors=num_neighbors)[1][0])
@@ -128,15 +131,15 @@ def estimate(budget_input, genres, actors, director):
     similar_movies = df_all_details.query('id  in @similar_ids')[["id","title","genres","release_date","revenue","popularity"]].merge(
         df_all_casting.query('id  in @similar_ids')[["id","director_name","actor1_name","actor2_name","actor3_name"]],on="id"
     )
-    
-    
+
+
     popularity = M_pop.predict(xx)
     revenue = M.predict(xx)[0]
-    
+
     return (revenue,popularity,similar_ids, similar_movies)
 
-    
-  
+
+
 # Input from User
 #-------------------------------------------
 
@@ -164,7 +167,7 @@ actors_list = sorted(['Kathy Bates','Billy Zane','Frances Fisher','Leonardo DiCa
 actors = st.sidebar.multiselect('Actors',actors_list,max_selections=5,default=actors_list[:5])
 
 # Genres
-genres_list= sorted(['action', 'adventure', 'animation', 'comedy', 'crime', 'documentary', 'drama', 'family', 'fantasy', 
+genres_list= sorted(['action', 'adventure', 'animation', 'comedy', 'crime', 'documentary', 'drama', 'family', 'fantasy',
               'foreign', 'history', 'horror', 'movie', 'music', 'mystery', 'romance', 'science', 'thriller', 'tv', 'war', 'western'])
 genres = st.sidebar.multiselect('Genres',genres_list, default=genres_list[0])
 
@@ -181,17 +184,17 @@ headcol1, headcol2 = st.columns([5,1])
 with headcol1:
     # Title
     st.title('Movie Revenue Prediction')
-    
+
     # Description
     st.write("""
     ### Description:
     This project will help you predict the **revenue** for a movie based on some parameters like; director, actors, month of the year ... etc.
     """)
-    
+
 with headcol2:
     # Team Logo
     st.image("https://i.ibb.co/mchjR4k/zagros-icon.png")
-    
+
 
 # ==============================================
 
@@ -217,10 +220,10 @@ if st.sidebar.button('Estimate'):
     plt.ylabel("Count")
     plt.xlabel("Revenue in $MM")
 
-    st.pyplot(fig1)  
-            
+    st.pyplot(fig1)
+
     tcol1, tcol2, tcol3 = st.columns([1,1,1])
-    
+
     with tcol1:
         st.write(f"""
         ### Revenue:
@@ -233,13 +236,13 @@ if st.sidebar.button('Estimate'):
         ### Profit($):
         ### ${'{:,}'.format(profit)}
         """)
-        
+
     with tcol3:
         st.write(f"""
         ### Popularity 🎭:
         ### {str(round(popularity[0],2))} /10
         """)
-    
+
     gauge_max=10
     fig = go.Figure(go.Indicator(
     domain = {'x': [0, 1], 'y': [0, 1]},
@@ -255,12 +258,13 @@ if st.sidebar.button('Estimate'):
                  {'range': [7, 10], 'color': "green"}],
              'threshold' : {'line': {'color': "white", 'width': 4}, 'thickness': 0.75, 'value': round(popularity[0],2)},
              'bar': {'color': "white", 'thickness':0.25}}))
-        
+
     st.plotly_chart(fig)
-    
+
     # st.write(similar_ids)
     # st.write(similar_movies)
     st.write('---')
+
     st.subheader('Similar Movies')
     
     counter = 0
@@ -271,3 +275,4 @@ if st.sidebar.button('Estimate'):
     with st.expander("Click the drop-down and select a movie for SHAP Analysis.",expanded=False):
         selected_movie = st.radio('Select a movie:',similar_movies['title'])
     
+
