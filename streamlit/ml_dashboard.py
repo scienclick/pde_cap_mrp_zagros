@@ -1,10 +1,3 @@
-from IPython import get_ipython
-ipython = get_ipython()
-
-if '__IPYTHON__' in globals():
-    ipython.magic('load_ext autoreload')
-    ipython.magic('autoreload 2')
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -84,6 +77,8 @@ preprocessor_with_id = get_models()[2]
 M_pop = get_models()[3]
 knn_model = get_models()[4]
 m_fit = get_models()[5]
+
+
 #=========================================================================================================
 
 # Set layout , title, and icon.
@@ -116,10 +111,27 @@ def estimate(budget_input, genres, actors, director):
     record_casting["actor5_name"] = actors[4]
     record_casting["director_name"] = director
     xx=tweak_data4_prediction(df_all_casting,record_casting,df_all_details,record_data,data_awards_cleaned)
+    
+    X_with_id=df_nulls.drop(columns=["revenue","popularity"])
+    X_with_id_processed=pd.DataFrame(preprocessor_with_id.transform(X_with_id),columns=preprocessor_with_id.get_feature_names_out())
+    
+    
+    # Find Similar movies 
+    num_neighbors=5
+    xx_processed=preprocessor.transform(xx)#sample processed
+    similars=list(knn_model.kneighbors(xx_processed,n_neighbors=num_neighbors)[1][0])
+    similar_ids=list(X_with_id_processed.iloc[similars].remainder__id.values)
+    similar_movies = df_all_details.query('id  in @similar_ids')[["id","title","genres","release_date","revenue","popularity"]].merge(
+        df_all_casting.query('id  in @similar_ids')[["id","director_name","actor1_name","actor2_name","actor3_name"]],on="id"
+    )
+    
+    
     popularity = M_pop.predict(xx)
     revenue = M.predict(xx)[0]
-    return (revenue,popularity)
+    
+    return (revenue,popularity,similar_ids, similar_movies)
 
+    
   
 # Input from User
 #-------------------------------------------
@@ -164,7 +176,7 @@ headcol1, headcol2 = st.columns([5,1])
 
 with headcol1:
     # Title
-    st.title('Movie Revenue Project')
+    st.title('Movie Revenue Prediction')
     
     # Description
     st.write("""
@@ -182,7 +194,8 @@ with headcol2:
 if st.sidebar.button('Estimate'):
     revenue = estimate(budget_input,genres,actors, director)[0]
     popularity = estimate(budget_input,genres,actors, director)[1]
-    
+    similar_ids = estimate(budget_input,genres,actors, director)[2]
+    similar_movies = estimate(budget_input,genres,actors, director)[3]
     #==== Hist Plot ==============================
 
     #make this example reproducible
@@ -240,3 +253,16 @@ if st.sidebar.button('Estimate'):
         
     st.plotly_chart(fig)
     
+    # st.write(similar_ids)
+    # st.write(similar_movies)
+    st.write('---')
+    # counter = 0
+    # for movie in similar_movies['title']:
+    #     counter+=1
+    #     st.write(f'{counter}) {movie}')
+     
+    if st.radio("Similar Movies",similar_movies['title'], on_change=None):
+        pass
+    
+    if st.button('Check Shap Analysis'):
+        pass
