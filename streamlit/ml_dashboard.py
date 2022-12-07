@@ -6,13 +6,14 @@ import seaborn as sns
 import plotly.graph_objects as go
 import pickle
 import warnings
-import shap
+import shap.plots
 import random
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn import set_config
 from mrputils.loaders import DataLoader
 from mrputils.processors import tweak_data,tweak_data4_prediction
-import sys
+from streamlit_shap import st_shap
+#import sys
 #====================================================================
 #region imports
 st.set_page_config(layout='centered', page_title="Zagros PDE", page_icon='🎬')
@@ -33,9 +34,11 @@ warnings.filterwarnings(action='once')
 # %cd '/home/abdurraouf/code/Abdurraouf/pde_cap_mrp_zagros'
 
 #endregion
+
 popularity = 0
 revenue = 0
-#== Import The Data ======================================================================================
+
+#region == Import The Data ======================================================================================
 
 if "dp" not in st.session_state:
     @st.cache()
@@ -54,13 +57,11 @@ df_awards,df_all_casting,df_all_details,data_awards_cleaned=dp.df_awards,dp.df_a
 def tweak_data_wrapper(df_all_casting,df_all_details,df_awards):
     return tweak_data(df_all_casting,df_all_details,df_awards)
 __,df_nulls=tweak_data_wrapper(df_all_casting,df_all_details,data_awards_cleaned)
+#endregion
 
+#region == Load The Models ======================================================================================
 
-#== Load The Models ======================================================================================
-
-# Use st.session_state and @st.cache
-
-
+@st.cache(suppress_st_warning=True, allow_output_mutation=True)
 def get_models(): 
     M=pickle.load(open('models/finalized_model.sav',"rb")) # model for revenue
     preprocessor=pickle.load(open('models/preprocessor_x.sav',"rb")) #processor #1
@@ -71,13 +72,15 @@ def get_models():
     
     return (M, preprocessor, preprocessor_with_id, M_pop, knn_model, m_fit)
 
-M = get_models()[0]
-preprocessor = get_models()[1]
-preprocessor_with_id = get_models()[2]
-M_pop = get_models()[3]
-knn_model = get_models()[4]
-m_fit = get_models()[5]
+models = get_models()
 
+M = models[0]
+preprocessor = models[1]
+preprocessor_with_id = models[2]
+M_pop = models[3]
+knn_model = models[4]
+m_fit = models[5]
+#endregion
 
 #=========================================================================================================
 
@@ -88,19 +91,20 @@ m_fit = get_models()[5]
 # with open('style.css') as f:
 #     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     
+
+
+#=================================================
+#                    Sidebar                     #
+#=================================================
+
+# region Sidebar
+
 # SLB Logo
 st.sidebar.image('https://seeklogo.com/images/S/slb-2022-logo-39A081F6E8-seeklogo.com.png',width=80)
 
 st.sidebar.write("___")
 
-#=================================================
-#                    Sidebar                     #
-#=================================================
-@st.cache()
-def dummy():
-    pass
-
-dummy()
+@st.cache
 def estimate(budget_input, genres, actors, director):
     #== sample record format for prediction; sample data called xx ===========================================
     id=597
@@ -119,6 +123,10 @@ def estimate(budget_input, genres, actors, director):
     X_with_id=df_nulls.drop(columns=["revenue","popularity"])
     X_with_id_processed=pd.DataFrame(preprocessor_with_id.transform(X_with_id),columns=preprocessor_with_id.get_feature_names_out())
     
+    X=df_nulls.drop(columns=["id","revenue","popularity"])
+    X_processed=pd.DataFrame(preprocessor.transform(X),columns=preprocessor.get_feature_names_out())
+
+    st.session_state['X_processed'] = X_processed
     
     # Find Similar movies 
     num_neighbors=5
@@ -134,25 +142,24 @@ def estimate(budget_input, genres, actors, director):
     revenue = M.predict(xx)[0]
     
     return (revenue,popularity,similar_ids, similar_movies)
-
-    
+ 
   
-# Input from User
+# Input from User 
 #-------------------------------------------
 
-# Budget Text_Input
+# Budget 
 budget_input = st.sidebar.slider(label='Budget in Million (USD):',value=20, max_value=200, step=5, on_change=None)
 budget_input=budget_input*1000_000
 
 st.sidebar.write("___")
 
-# Directors List
+# [Directors List]
 directors_list=sorted(['James Cameron','Steven Spielberg','Don Hertzfeldt','Clint Eastwood','Martin Scorsese',
                 'Woody Allen','Joel Coen','Quentin Tarantino','Pedro Almodóvar','Peter Jackson','Christopher Nolan',
                 "James Bobin", "Roar Uthaug", "F. Gary Gray"])
 director = st.sidebar.selectbox('Director:', directors_list)
 
-# Actors List
+# [Actors List]
 actors_list = sorted(['Kathy Bates','Billy Zane','Frances Fisher','Leonardo DiCaprio','Kate Winslet','Mel Blanc','Sivaji Ganesan',
                       'James A. FitzPatrick','Oliver Hardy','Mammootty','Charles Starrett','M. G. Ramachandran','Gemini Ganesan',
                       'Johnny Mack Brown','Pinto Colvig',"Isabela Merced", "Jeffrey Wahlberg", "Madeleine Madden", "Eugenio Derbez", "Michael Pena",
@@ -163,13 +170,14 @@ actors_list = sorted(['Kathy Bates','Billy Zane','Frances Fisher','Leonardo DiCa
                "Tessa Thompson", "Rebecca Ferguson", "Kumail Nanjiani", "Rafe Spall"])
 actors = st.sidebar.multiselect('Actors',actors_list,max_selections=5,default=actors_list[:5])
 
-# Genres
+# [Genres]
 genres_list= sorted(['action', 'adventure', 'animation', 'comedy', 'crime', 'documentary', 'drama', 'family', 'fantasy', 
               'foreign', 'history', 'horror', 'movie', 'music', 'mystery', 'romance', 'science', 'thriller', 'tv', 'war', 'western'])
 genres = st.sidebar.multiselect('Genres',genres_list, default=genres_list[0])
 
 st.sidebar.write("___")
 
+#endregion
 
 #================================================
 #                 Main Page                     #
@@ -195,11 +203,17 @@ with headcol2:
 
 # ==============================================
 
-if st.sidebar.button('Estimate'):
-    revenue = estimate(budget_input,genres,actors, director)[0]
-    popularity = estimate(budget_input,genres,actors, director)[1]
-    similar_ids = estimate(budget_input,genres,actors, director)[2]
-    similar_movies = estimate(budget_input,genres,actors, director)[3]
+#region ==== ESTIMATE =====
+button = st.sidebar.button('Estimate')
+if button:
+    estimation= estimate(budget_input,genres,actors, director)
+    revenue = estimation[0]
+    popularity = estimation[1]
+    similar_ids = estimation[2]
+    similar_movies = estimation[3]
+    
+    st.session_state['Similar_Movies'] = similar_movies
+    
     #==== Hist Plot ==============================
 
     #make this example reproducible
@@ -240,6 +254,7 @@ if st.sidebar.button('Estimate'):
         ### {str(round(popularity[0],2))} /10
         """)
     
+    # Popularity Chart
     gauge_max=10
     fig = go.Figure(go.Indicator(
     domain = {'x': [0, 1], 'y': [0, 1]},
@@ -257,17 +272,29 @@ if st.sidebar.button('Estimate'):
              'bar': {'color': "white", 'thickness':0.25}}))
         
     st.plotly_chart(fig)
+    #endregion
     
     # st.write(similar_ids)
     # st.write(similar_movies)
-    st.write('---')
-    st.subheader('Similar Movies')
     
-    counter = 0
-    for movie in similar_movies['title']:
-        counter+=1
-        st.write(f'{counter}) {movie}')
+st.write('---')
+st.subheader('Similar Movies')
+
+counter = 0
+for movie in similar_movies['title']:
+    counter+=1
+    st.write(f'{counter}) {movie}')
+
+# with st.expander("Click the drop-down and select a movie for SHAP Analysis.",expanded=False):
+#     selected_movie = st.sidebar('Select a movie:',similar_movies['title'])
     
-    with st.expander("Click the drop-down and select a movie for SHAP Analysis.",expanded=False):
-        selected_movie = st.radio('Select a movie:',similar_movies['title'])
+# X_processed = st.session_state['X_processed']
+# expected_value = float(np.load('models/expected_value.npy')) # load
+# shap_values = np.load('models/shap_values.npy') # load
+
+# i=list(similar_movies['title']).index(selected_movie)
+
+# # index of the selected movie
+# st.write((list(similar_movies['title'])).index(selected_movie))
     
+# st_shap(shap.plots._waterfall.waterfall_legacy(expected_value, shap_values[i],feature_names=X_processed.columns,max_display = 14))
