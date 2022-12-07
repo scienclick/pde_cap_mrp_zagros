@@ -13,7 +13,6 @@ from sklearn import set_config
 from mrputils.loaders import DataLoader
 from mrputils.processors import tweak_data,tweak_data4_prediction
 
-from streamlit_shap import st_shap
 #import sys
 
 #====================================================================
@@ -66,7 +65,7 @@ __,df_nulls=tweak_data_wrapper(df_all_casting,df_all_details,data_awards_cleaned
 
 
 @st.cache(suppress_st_warning=True, allow_output_mutation=True)
-def get_models(): 
+def get_models():
     M=pickle.load(open('models/finalized_model.sav',"rb")) # model for revenue
     preprocessor=pickle.load(open('models/preprocessor_x.sav',"rb")) #processor #1
     preprocessor_with_id=pickle.load(open('models/preprocessor_x_id.sav',"rb")) # processor #2
@@ -127,15 +126,15 @@ def estimate(budget_input, genres, actors, director):
     X_with_id=df_nulls.drop(columns=["revenue","popularity"])
     X_with_id_processed=pd.DataFrame(preprocessor_with_id.transform(X_with_id),columns=preprocessor_with_id.get_feature_names_out())
 
-    
+
     X=df_nulls.drop(columns=["id","revenue","popularity"])
     X_processed=pd.DataFrame(preprocessor.transform(X),columns=preprocessor.get_feature_names_out())
 
     st.session_state['X_processed'] = X_processed
     st.session_state['X_with_id_processed'] = X_with_id_processed
 
-    
-    # Find Similar movies 
+
+    # Find Similar movies
 
     num_neighbors=5
     xx_processed=preprocessor.transform(xx)#sample processed
@@ -146,20 +145,20 @@ def estimate(budget_input, genres, actors, director):
     )
 
     st.session_state['similar_movies']=similar_movies
-    
+
     popularity = M_pop.predict(xx)
     revenue = M.predict(xx)[0]
 
     return (revenue,popularity,similar_ids, similar_movies)
 
- 
-  
-# Input from User 
+
+
+# Input from User
 
 
 #-------------------------------------------
 
-# Budget 
+# Budget
 budget_input = st.sidebar.slider(label='Budget in Million (USD):',value=20, max_value=200, step=5, on_change=None)
 budget_input=budget_input*1000_000
 
@@ -183,7 +182,7 @@ actors = st.sidebar.multiselect('Actors',actors_list,max_selections=5,default=ac
 
 
 # [Genres]
-genres_list= sorted(['action', 'adventure', 'animation', 'comedy', 'crime', 'documentary', 'drama', 'family', 'fantasy', 
+genres_list= sorted(['action', 'adventure', 'animation', 'comedy', 'crime', 'documentary', 'drama', 'family', 'fantasy',
               'foreign', 'history', 'horror', 'movie', 'music', 'mystery', 'romance', 'science', 'thriller', 'tv', 'war', 'western'])
 genres = st.sidebar.multiselect('Genres',genres_list, default=genres_list[0])
 
@@ -227,9 +226,9 @@ if button:
     popularity = estimation[1]
     similar_ids = estimation[2]
     similar_movies = estimation[3]
-    
+
     st.session_state['Similar_Movies'] = similar_movies
-    
+
     #==== Hist Plot ==============================
 
     #make this example reproducible
@@ -289,7 +288,7 @@ if button:
     st.plotly_chart(fig)
 
     #endregion
-    
+
     # st.write(similar_ids)
     # st.write(similar_movies)
 
@@ -305,7 +304,7 @@ for movie in st.session_state['Similar_Movies']['title']:
 
 with st.expander("Click the drop-down and select a movie for SHAP Analysis.",expanded=False):
     selected_movie = st.selectbox('Select a movie:',similar_movies['title'])
-    
+
 X_processed = st.session_state['X_processed']
 X_with_id_processed = st.session_state['X_with_id_processed']
 
@@ -317,13 +316,13 @@ id = list(similar_movies['title']).index(selected_movie)
 i = st.session_state['Similar_Movies'].iloc[id]['id']
 
 
-# Debugging only    
-print(st.session_state['Similar_Movies'])    
-print(id) 
+# Debugging only
+print(st.session_state['Similar_Movies'])
+print(id)
 print(i)
-# _________________________________________________________  
-   
-ii=X_with_id_processed[X_with_id_processed.remainder__id==i ].index.values[0]   
+# _________________________________________________________
+
+ii=X_with_id_processed[X_with_id_processed.remainder__id==i ].index.values[0]
 ss=pd.Series(shap_values[ii],index=X_processed.columns)
 s1=np.sign(ss)
 s2=ss.map(lambda x : x).abs().sort_values(ascending = False)
@@ -345,4 +344,3 @@ fig = go.Figure(go.Waterfall(
 fig.update_layout(title = "Profit and loss statement 2018")
 
 st.write(fig)
-
