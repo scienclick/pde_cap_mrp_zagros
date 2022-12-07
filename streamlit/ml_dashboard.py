@@ -108,7 +108,7 @@ st.sidebar.image('https://seeklogo.com/images/S/slb-2022-logo-39A081F6E8-seeklog
 
 st.sidebar.write("___")
 
-@st.cache
+@st.cache()
 def estimate(budget_input, genres, actors, director):
     #== sample record format for prediction; sample data called xx ===========================================
     id=597
@@ -132,6 +132,8 @@ def estimate(budget_input, genres, actors, director):
     X_processed=pd.DataFrame(preprocessor.transform(X),columns=preprocessor.get_feature_names_out())
 
     st.session_state['X_processed'] = X_processed
+    st.session_state['X_with_id_processed'] = X_with_id_processed
+
     
     # Find Similar movies 
 
@@ -143,7 +145,8 @@ def estimate(budget_input, genres, actors, director):
         df_all_casting.query('id  in @similar_ids')[["id","director_name","actor1_name","actor2_name","actor3_name"]],on="id"
     )
 
-
+    st.session_state['similar_movies']=similar_movies
+    
     popularity = M_pop.predict(xx)
     revenue = M.predict(xx)[0]
 
@@ -173,7 +176,6 @@ actors_list = sorted(['Kathy Bates','Billy Zane','Frances Fisher','Leonardo DiCa
                       'James A. FitzPatrick','Oliver Hardy','Mammootty','Charles Starrett','M. G. Ramachandran','Gemini Ganesan',
                       'Johnny Mack Brown','Pinto Colvig',"Isabela Merced", "Jeffrey Wahlberg", "Madeleine Madden", "Eugenio Derbez", "Michael Pena",
                       "Alicia Vikander", "Dominic West", "Walton Goggins",
-
                "Daniel Wu", "Kristin Scott Thomas", "Chris Hemsworth",
 
                "Tessa Thompson", "Rebecca Ferguson", "Kumail Nanjiani", "Rafe Spall"])
@@ -208,14 +210,18 @@ with headcol1:
 
 with headcol2:
     # Team Logo
-    st.image("https://i.ibb.co/mchjR4k/zagros-icon.png")
+    st.write("")
+    # st.image("https://i.ibb.co/mchjR4k/zagros-icon.png")
 
 
 # ==============================================
 
 #region ==== ESTIMATE =====
 button = st.sidebar.button('Estimate')
+
 if button:
+    if 'similar_movies' in st.session_state:
+        del st.session_state['Similar_Movies']
     estimation= estimate(budget_input,genres,actors, director)
     revenue = estimation[0]
     popularity = estimation[1]
@@ -287,27 +293,56 @@ if button:
     # st.write(similar_ids)
     # st.write(similar_movies)
 
-    
+# similar_movies = st.session_state['similar_movies']
+
 st.write('---')
 st.subheader('Similar Movies')
-
+similar_movies = st.session_state['Similar_Movies']
 counter = 0
-for movie in similar_movies['title']:
+for movie in st.session_state['Similar_Movies']['title']:
     counter+=1
     st.write(f'{counter}) {movie}')
 
-# with st.expander("Click the drop-down and select a movie for SHAP Analysis.",expanded=False):
-#     selected_movie = st.sidebar('Select a movie:',similar_movies['title'])
+with st.expander("Click the drop-down and select a movie for SHAP Analysis.",expanded=False):
+    selected_movie = st.selectbox('Select a movie:',similar_movies['title'])
     
-# X_processed = st.session_state['X_processed']
-# expected_value = float(np.load('models/expected_value.npy')) # load
-# shap_values = np.load('models/shap_values.npy') # load
+X_processed = st.session_state['X_processed']
+X_with_id_processed = st.session_state['X_with_id_processed']
 
-# i=list(similar_movies['title']).index(selected_movie)
+shap_values = np.load('models/shap_values.npy') # load
+expected_value = float(np.load('models/expected_value.npy')) # load
 
 # # index of the selected movie
-# st.write((list(similar_movies['title'])).index(selected_movie))
-    
+id = list(similar_movies['title']).index(selected_movie)
+i = st.session_state['Similar_Movies'].iloc[id]['id']
 
-# st_shap(shap.plots._waterfall.waterfall_legacy(expected_value, shap_values[i],feature_names=X_processed.columns,max_display = 14))
+
+# Debugging only    
+print(st.session_state['Similar_Movies'])    
+print(id) 
+print(i)
+# _________________________________________________________  
+   
+ii=X_with_id_processed[X_with_id_processed.remainder__id==i ].index.values[0]   
+ss=pd.Series(shap_values[ii],index=X_processed.columns)
+s1=np.sign(ss)
+s2=ss.map(lambda x : x).abs().sort_values(ascending = False)
+s3=s2*s1
+s3=s3.reindex(s2.index)
+S=s3[0:13]
+S=S.append(pd.Series([s3[13:].sum()],index=["__Rest_of_features"]))
+S=S.rename(index={k: k.lower().split('__')[1] for k in S.index})
+
+import plotly.graph_objects as go
+
+fig = go.Figure(go.Waterfall(
+    name = "2018", orientation = "h", measure = ["relative"]*len(S),
+    y = S.index,
+    x = S.values,
+    connector = {"mode":"between", "line":{"width":4, "color":"rgb(0, 0, 0)", "dash":"solid"}}
+))
+
+fig.update_layout(title = "Profit and loss statement 2018")
+
+st.write(fig)
 
