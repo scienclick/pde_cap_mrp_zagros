@@ -20,6 +20,7 @@ decorator==5.1.1
 docutils==0.19
 entrypoints==0.4
 executing==1.2.0
+fastjsonschema==2.16.2
 fonttools==4.38.0
 gitdb==4.0.10
 GitPython==3.1.29
@@ -44,6 +45,7 @@ matplotlib==3.6.2
 matplotlib-inline==0.1.6
 more-itertools==9.0.0
 mrputils==0.7.2
+nbformat==5.7.0
 nest-asyncio==1.5.6
 nltk==3.7
 numba==0.56.4
