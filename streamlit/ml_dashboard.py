@@ -3,6 +3,10 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
+
+sns.set(style="ticks", context="talk")
+plt.style.use("dark_background")
+
 import plotly.graph_objects as go
 import pickle
 import warnings
@@ -355,12 +359,12 @@ try:
     st.write(fig)
 
 
-    
+
 
     # st.header("${0:2.0f} more than expected value {1:2.0f}".format(S.sum(),expected_value))
 
     st.header('Difference from Expected value: ${:,} M'.format(np.round(S.sum()/1000_000,2)))
-    
+
     st.write(st.session_state['Similar_Movies'].drop(columns=['id','release_date','popularity']))
 
 
