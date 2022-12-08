@@ -103,8 +103,8 @@ m_fit = st.session_state['models'][5]
 # region Sidebar
 
 # SLB Logo
-st.sidebar.image('https://seeklogo.com/images/S/slb-2022-logo-39A081F6E8-seeklogo.com.png',width=80)
-
+# st.sidebar.image('https://seeklogo.com/images/S/slb-2022-logo-39A081F6E8-seeklogo.com.png',width=80)
+st.sidebar.image(r'./imgs/SLB_Logo_White.png',width=100)
 st.sidebar.write("___")
 
 # @st.cache()
@@ -343,5 +343,7 @@ try:
     fig.update_layout(title = "{0:2.0f} more than expected value {1:2.0f}".format(S.sum(),expected_value))
 
     st.write(fig)
+    st.write(st.session_state['Similar_Movies'].drop(columns=['id','release_date','popularity']))
+    
 except:
     pass
