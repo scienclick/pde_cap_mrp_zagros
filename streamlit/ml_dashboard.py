@@ -21,7 +21,7 @@ from mrputils.processors import tweak_data,tweak_data4_prediction
 
 #====================================================================
 #region imports
-st.set_page_config(layout='centered', page_title="Zagros PDE", page_icon='🎬')
+st.set_page_config(layout='centered', page_title="Zagros DDS", page_icon='🎬')
 set_config(display="diagram")
 
 RANDOMSEED = 100
@@ -239,8 +239,10 @@ if button:
     x = np.random.normal(loc = 61737022.44220184, scale = 139664301.60821903, size =1000)
 
     #create normal distribution curve
+    print("---------------------------")
+    print(df_nulls.query('revenue > 10000000').revenue.shape)
     fig1, ax = plt.subplots(figsize=(5,4))
-    fig1 = sns.displot(x, kde=True)
+    fig1 = sns.displot(df_nulls.query('revenue > 10000000 and revenue <1000000000').revenue, kde=True,bins=50)
     plt.axvline(revenue, color='red', linestyle='dashed', linewidth=2, label='valueeeee')
     ymin, ymax = plt.ylim()
     plt.text(revenue,ymax*0.7,f'${round(revenue/1000_000,2)}MM',rotation=90)
