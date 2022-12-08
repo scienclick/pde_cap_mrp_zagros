@@ -296,51 +296,55 @@ if button:
 
 st.write('---')
 st.subheader('Similar Movies')
-similar_movies = st.session_state['Similar_Movies']
-counter = 0
-for movie in st.session_state['Similar_Movies']['title']:
-    counter+=1
-    st.write(f'{counter}) {movie}')
+try:
+    similar_movies = st.session_state['Similar_Movies']
 
-with st.expander("Click the drop-down and select a movie for SHAP Analysis.",expanded=False):
-    selected_movie = st.selectbox('Select a movie:',similar_movies['title'])
+    counter = 0
+    for movie in st.session_state['Similar_Movies']['title']:
+        counter+=1
+        st.write(f'{counter}) {movie}')
 
-X_processed = st.session_state['X_processed']
-X_with_id_processed = st.session_state['X_with_id_processed']
+    with st.expander("Click the drop-down and select a movie for SHAP Analysis.",expanded=False):
+        selected_movie = st.selectbox('Select a movie:',similar_movies['title'])
 
-shap_values = np.load('models/shap_values.npy') # load
-expected_value = float(np.load('models/expected_value.npy')) # load
+    X_processed = st.session_state['X_processed']
+    X_with_id_processed = st.session_state['X_with_id_processed']
 
-# # index of the selected movie
-id = list(similar_movies['title']).index(selected_movie)
-i = st.session_state['Similar_Movies'].iloc[id]['id']
+    shap_values = np.load('models/shap_values.npy') # load
+    expected_value = float(np.load('models/expected_value.npy')) # load
+
+    # # index of the selected movie
+    id = list(similar_movies['title']).index(selected_movie)
+    i = st.session_state['Similar_Movies'].iloc[id]['id']
 
 
-# Debugging only
-print(st.session_state['Similar_Movies'])
-print(id)
-print(i)
-# _________________________________________________________
+    # Debugging only
+    print(st.session_state['Similar_Movies'])
+    print(id)
+    print(i)
+    # _________________________________________________________
 
-ii=X_with_id_processed[X_with_id_processed.remainder__id==i ].index.values[0]
-ss=pd.Series(shap_values[ii],index=X_processed.columns)
-s1=np.sign(ss)
-s2=ss.map(lambda x : x).abs().sort_values(ascending = False)
-s3=s2*s1
-s3=s3.reindex(s2.index)
-S=s3[0:13]
-S=S.append(pd.Series([s3[13:].sum()],index=["__Rest_of_features"]))
-S=S.rename(index={k: k.lower().split('__')[1] for k in S.index})
+    ii=X_with_id_processed[X_with_id_processed.remainder__id==i ].index.values[0]
+    ss=pd.Series(shap_values[ii],index=X_processed.columns)
+    s1=np.sign(ss)
+    s2=ss.map(lambda x : x).abs().sort_values(ascending = False)
+    s3=s2*s1
+    s3=s3.reindex(s2.index)
+    S=s3[0:13]
+    S=S.append(pd.Series([s3[13:].sum()],index=["__Rest_of_features"]))
+    S=S.rename(index={k: k.lower().split('__')[1] for k in S.index})
 
-import plotly.graph_objects as go
+    import plotly.graph_objects as go
 
-fig = go.Figure(go.Waterfall(
-    name = "2018", orientation = "h", measure = ["relative"]*len(S),
-    y = S.index,
-    x = S.values,
-    connector = {"mode":"between", "line":{"width":4, "color":"rgb(0, 0, 0)", "dash":"solid"}}
-))
+    fig = go.Figure(go.Waterfall(
+        name = "2018", orientation = "h", measure = ["relative"]*len(S),
+        y = S.index,
+        x = S.values,
+        connector = {"mode":"between", "line":{"width":4, "color":"rgb(0, 0, 0)", "dash":"solid"}}
+    ))
 
-fig.update_layout(title = "Profit and loss statement 2018")
+    fig.update_layout(title = "{0:2.0f} more than expected value {1:2.0f}".format(S.sum(),expected_value))
 
-st.write(fig)
+    st.write(fig)
+except:
+    pass
