@@ -205,7 +205,7 @@ with headcol1:
     st.title('Movie revenue toolkit')
     # Description
     st.write("""
-    ### Model 1: Revenue forcast- this model predicts the **revenue** for a movie based on the director, actors, and genres
+    ### Model 1: Revenue forcast- this model predicts the **revenue** for a movie based on the budget, director, actors, and genres
     """)
 
 with headcol2:
