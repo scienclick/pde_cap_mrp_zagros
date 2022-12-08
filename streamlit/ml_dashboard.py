@@ -75,14 +75,14 @@ def get_models():
 
     return (M, preprocessor, preprocessor_with_id, M_pop, knn_model, m_fit)
 
-models = get_models()
+st.session_state['models'] = get_models()
 
-M = models[0]
-preprocessor = models[1]
-preprocessor_with_id = models[2]
-M_pop = models[3]
-knn_model = models[4]
-m_fit = models[5]
+M = st.session_state['models'][0]
+preprocessor = st.session_state['models'][1]
+preprocessor_with_id = st.session_state['models'][2]
+M_pop = st.session_state['models'][3]
+knn_model = st.session_state['models'][4]
+m_fit = st.session_state['models'][5]
 #endregion
 
 #=========================================================================================================
@@ -107,7 +107,7 @@ st.sidebar.image('https://seeklogo.com/images/S/slb-2022-logo-39A081F6E8-seeklog
 
 st.sidebar.write("___")
 
-@st.cache()
+# @st.cache()
 def estimate(budget_input, genres, actors, director):
     #== sample record format for prediction; sample data called xx ===========================================
     id=597
@@ -135,7 +135,7 @@ def estimate(budget_input, genres, actors, director):
 
 
     # Find Similar movies
-
+    #test
     num_neighbors=5
     xx_processed=preprocessor.transform(xx)#sample processed
     similars=list(knn_model.kneighbors(xx_processed,n_neighbors=num_neighbors)[1][0])
@@ -174,10 +174,8 @@ director = st.sidebar.selectbox('Director:', directors_list)
 actors_list = sorted(['Kathy Bates','Billy Zane','Frances Fisher','Leonardo DiCaprio','Kate Winslet','Mel Blanc','Sivaji Ganesan',
                       'James A. FitzPatrick','Oliver Hardy','Mammootty','Charles Starrett','M. G. Ramachandran','Gemini Ganesan',
                       'Johnny Mack Brown','Pinto Colvig',"Isabela Merced", "Jeffrey Wahlberg", "Madeleine Madden", "Eugenio Derbez", "Michael Pena",
-                      "Alicia Vikander", "Dominic West", "Walton Goggins",
-               "Daniel Wu", "Kristin Scott Thomas", "Chris Hemsworth",
-
-               "Tessa Thompson", "Rebecca Ferguson", "Kumail Nanjiani", "Rafe Spall"])
+                      "Alicia Vikander", "Dominic West", "Walton Goggins", "Daniel Wu", "Kristin Scott Thomas", "Chris Hemsworth", "Tessa Thompson", 
+                      "Rebecca Ferguson", "Kumail Nanjiani", "Rafe Spall"])
 actors = st.sidebar.multiselect('Actors',actors_list,max_selections=5,default=actors_list[:5])
 
 
@@ -317,11 +315,10 @@ try:
     id = list(similar_movies['title']).index(selected_movie)
     i = st.session_state['Similar_Movies'].iloc[id]['id']
 
-
-    # Debugging only
-    print(st.session_state['Similar_Movies'])
-    print(id)
-    print(i)
+    # # Debugging only
+    # print(st.session_state['Similar_Movies'])
+    # print(id)
+    # print(i)
     # _________________________________________________________
 
     ii=X_with_id_processed[X_with_id_processed.remainder__id==i ].index.values[0]
