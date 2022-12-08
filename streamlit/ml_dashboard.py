@@ -174,7 +174,7 @@ director = st.sidebar.selectbox('Director:', directors_list)
 actors_list = sorted(['Kathy Bates','Billy Zane','Frances Fisher','Leonardo DiCaprio','Kate Winslet','Mel Blanc','Sivaji Ganesan',
                       'James A. FitzPatrick','Oliver Hardy','Mammootty','Charles Starrett','M. G. Ramachandran','Gemini Ganesan',
                       'Johnny Mack Brown','Pinto Colvig',"Isabela Merced", "Jeffrey Wahlberg", "Madeleine Madden", "Eugenio Derbez", "Michael Pena",
-                      "Alicia Vikander", "Dominic West", "Walton Goggins", "Daniel Wu", "Kristin Scott Thomas", "Chris Hemsworth", "Tessa Thompson", 
+                      "Alicia Vikander", "Dominic West", "Walton Goggins", "Daniel Wu", "Kristin Scott Thomas", "Chris Hemsworth", "Tessa Thompson",
                       "Rebecca Ferguson", "Kumail Nanjiani", "Rafe Spall"])
 actors = st.sidebar.multiselect('Actors',actors_list,max_selections=5,default=actors_list[:5])
 
@@ -197,7 +197,7 @@ headcol1, headcol2 = st.columns([5,1])
 
 with headcol1:
     # Title
-    st.title('Movie Revenue Prediction')
+    st.title('1- Movie Revenue Prediction')
 
     # Description
     st.write("""
@@ -293,7 +293,8 @@ if button:
 # similar_movies = st.session_state['similar_movies']
 
 st.write('---')
-st.subheader('Similar Movies')
+st.title('2- Similar Movies')
+
 try:
     similar_movies = st.session_state['Similar_Movies']
 
@@ -340,8 +341,13 @@ try:
         connector = {"mode":"between", "line":{"width":4, "color":"rgb(0, 0, 0)", "dash":"solid"}}
     ))
 
-    fig.update_layout(title = "{0:2.0f} more than expected value {1:2.0f}".format(S.sum(),expected_value))
-
+    st.write('---')
+    st.title('3-Contribution of Features in the Revenue')
+    st.subheader('Expected value: ${:,} M'.format(np.round(expected_value/1000_000,2)))
     st.write(fig)
+    # st.header("${0:2.0f} more than expected value {1:2.0f}".format(S.sum(),expected_value))
+
+    st.header('Difference from Expected value: ${:,} M'.format(np.round(S.sum()/1000_000,2)))
+
 except:
     pass
