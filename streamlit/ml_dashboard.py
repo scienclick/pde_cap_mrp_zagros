@@ -193,16 +193,15 @@ st.sidebar.write("___")
 #================================================
 
 # Header (Project Name and Description)
+
 headcol1, headcol2 = st.columns([5,1])
 
 with headcol1:
     # Title
-    st.title('1- Movie Revenue Prediction')
-
+    st.title('Movie revenue toolkit')
     # Description
     st.write("""
-    ### Description:
-    This project will help you predict the **revenue** for a movie based on some parameters like; director, actors, month of the year ... etc.
+    ### Model 1: Revenue forcast- this model predicts the **revenue** for a movie based on the director, actors, and genres
     """)
 
 with headcol2:
@@ -261,11 +260,16 @@ if button:
         ### ${'{:,}'.format(profit)}
         """)
 
-    with tcol3:
-        st.write(f"""
-        ### Popularity 🎭:
-        ### {str(round(popularity[0],2))} /10
-        """)
+    # with tcol3:
+        # st.write(f"""
+        # ### Popularity 🎭:
+        # ### {str(round(popularity[0],2))} /10
+        # """)
+
+    st.write("___")
+    st.write("""
+             ## Model 2: Popularity predictor (scale of 1-10)
+             """)
 
     gauge_max=10
     fig = go.Figure(go.Indicator(
@@ -292,8 +296,10 @@ if button:
 
 # similar_movies = st.session_state['similar_movies']
 
-st.write('---')
-st.title('2- Similar Movies')
+st.write("___")
+st.write("""
+         ## Model 3: Similar movies
+            """)
 
 try:
     similar_movies = st.session_state['Similar_Movies']
@@ -340,9 +346,11 @@ try:
         x = S.values,
         connector = {"mode":"between", "line":{"width":4, "color":"rgb(0, 0, 0)", "dash":"solid"}}
     ))
+    st.write("___")
+    st.write("""
+             ## Revenue contributing factors in the selected movie
+             """)
 
-    st.write('---')
-    st.title('3-Contribution of Features in the Revenue')
     st.subheader('Expected value: ${:,} M'.format(np.round(expected_value/1000_000,2)))
     st.write(fig)
     # st.header("${0:2.0f} more than expected value {1:2.0f}".format(S.sum(),expected_value))
