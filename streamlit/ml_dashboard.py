@@ -103,8 +103,8 @@ m_fit = st.session_state['models'][5]
 # region Sidebar
 
 # SLB Logo
-st.sidebar.image('https://seeklogo.com/images/S/slb-2022-logo-39A081F6E8-seeklogo.com.png',width=80)
-
+# st.sidebar.image('https://seeklogo.com/images/S/slb-2022-logo-39A081F6E8-seeklogo.com.png',width=80)
+st.sidebar.image(r'./imgs/SLB_Logo_White.png',width=100)
 st.sidebar.write("___")
 
 # @st.cache()
@@ -345,9 +345,16 @@ try:
     st.title('3-Contribution of Features in the Revenue')
     st.subheader('Expected value: ${:,} M'.format(np.round(expected_value/1000_000,2)))
     st.write(fig)
+
+
+    
+
     # st.header("${0:2.0f} more than expected value {1:2.0f}".format(S.sum(),expected_value))
 
     st.header('Difference from Expected value: ${:,} M'.format(np.round(S.sum()/1000_000,2)))
+    
+    st.write(st.session_state['Similar_Movies'].drop(columns=['id','release_date','popularity']))
+
 
 except:
     pass
