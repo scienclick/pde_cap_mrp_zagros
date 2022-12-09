@@ -202,11 +202,14 @@ headcol1, headcol2 = st.columns([5,1])
 
 with headcol1:
     # Title
-    st.title('Movie revenue toolkit')
+    st.markdown("<h1 style='text-align: center; color: white;'>Movie revenue toolkit</h1>", unsafe_allow_html=True)
+
+    # st.title('Movie revenue toolkit')
     # Description
     st.write("""
     ### Model 1: Revenue forcast- this model predicts the **revenue** for a movie based on the budget, director, actors, and genres
     """)
+
 
 with headcol2:
     # Team Logo
@@ -350,8 +353,34 @@ try:
         name = "2018", orientation = "h", measure = ["relative"]*len(S),
         y = S.index,
         x = S.values,
-        connector = {"mode":"between", "line":{"width":4, "color":"rgb(0, 0, 0)", "dash":"solid"}}
+        connector = {"mode":"between", "line":{"width":4, "color":"rgb(0, 0, 0)", "dash":"solid"}},
+
     ))
+    fig.update_layout(
+    # title="Plot Title",
+    # autosize=False,
+    # width=1000,
+    # height=5000,
+    # xaxis_title="X Axis Title",
+    # legend_title="Legend Title",
+    font=dict(
+        size=12,
+        ),
+
+    yaxis=dict(
+    title_text=" Features",
+    titlefont=dict(size=24),
+    ),
+
+    xaxis=dict(
+    title_text="Contribution in Revenue",
+    titlefont=dict(size=24),
+    ),
+    width=1100,height=900
+
+    )
+    # st.plotly_chart(fig,width=1100,height=900)
+
     st.write("___")
     st.write("""
              ## Revenue contributing factors in the selected movie
