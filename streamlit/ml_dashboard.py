@@ -250,7 +250,7 @@ if button:
     ymin, ymax = plt.ylim()
     plt.text(revenue,ymax*0.7,f'${round(revenue/1000_000,2)}MM',rotation=90)
     plt.ylabel("Count")
-    plt.xlabel("Revenue in $MM")
+    plt.xlabel("Revenue ($)")
 
     st.pyplot(fig1)
 
@@ -394,7 +394,7 @@ try:
 
     # st.header("${0:2.0f} more than expected value {1:2.0f}".format(S.sum(),expected_value))
 
-    st.header('Difference from Expected value: ${:,} M'.format(np.round(S.sum()/1000_000,2)))
+    st.header('Difference from expected value: ${:,} M'.format(np.round(S.sum()/1000_000,2)))
 
     st.write(st.session_state['Similar_Movies'].drop(columns=['id','release_date','popularity']))
 
